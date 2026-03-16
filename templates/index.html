@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quizzy</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+  <header class="topbar">
+    <span class="logo">Quizzy</span>
+    <span class="badge">Piattaforma didattica</span>
+  </header>
+
+  <div class="container">
+
+    <h1>Benvenuto</h1>
+    <p class="page-intro">Accedi o crea un account per continuare.</p>
+
+    <div class="card">
+      <h2>Accedi</h2>
+      <input id="login_username" placeholder="Username">
+      <input id="login_password" type="password" placeholder="Password">
+      <button onclick="login()" style="width:100%; margin-top:8px;">Accedi</button>
+    </div>
+
+    <div class="card">
+      <h2>Registrazione</h2>
+      <input id="reg_username" placeholder="Username">
+      <input id="reg_password" type="password" placeholder="Password">
+      <select id="reg_ruolo">
+        <option value="studente">Studente</option>
+        <option value="docente">Docente</option>
+      </select>
+      <input id="reg_prof" placeholder="Professore (solo per studenti)">
+      <button onclick="register()" style="width:100%; margin-top:8px;">Crea account</button>
+    </div>
+
+    <p id="message"></p>
+
+  </div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

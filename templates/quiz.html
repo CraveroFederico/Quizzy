@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+  <header class="topbar">
+    <span class="logo">Quizzy</span>
+    <span class="badge">Quiz in corso</span>
+  </header>
+
+  <div class="container">
+
+    <h1 id="quiz_title"></h1>
+    <p class="page-intro">Seleziona una risposta per ogni domanda, poi invia.</p>
+
+    <div id="quiz_form"></div>
+
+    <button onclick="submitQuiz()" style="margin-top: 24px; padding: 12px 32px;">
+      Invia risposte
+    </button>
+
+    <h2 id="result"></h2>
+
+  </div>
+
+  <script src="/static/script.js"></script>
+  <script>
+    var titolo = localStorage.getItem("quiz");
+
+    fetch("/get_quiz/" + titolo)
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById("quiz_title").innerText = data.titolo;
+
+        var form = document.getElementById("quiz_form");
+
+        for (var i = 0; i < data.domande.length; i++) {
+          var d = data.domande[i];
+
+          var block = document.createElement("div");
+          block.className = "question-block";
+
+          var questionNum = i + 1;
+          block.innerHTML = '<h3>' + questionNum + '. ' + d.testo + '</h3>';
+
+          for (var j = 0; j < d.opzioni.length; j++) {
+            block.innerHTML +=
+              '<label>' +
+                '<input type="radio" name="q' + i + '" value="' + j + '">' +
+                d.opzioni[j] +
+              '</label>';
+          }
+
+          form.appendChild(block);
+        }
+      });
+  </script>
+
+</body>
+</html>

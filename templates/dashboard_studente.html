@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quizzy – Studente</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+  <header class="topbar">
+    <span class="logo">Quizzy</span>
+    <span class="badge">Studente</span>
+  </header>
+
+  <div class="container">
+
+    <h1>I tuoi quiz</h1>
+    <p class="page-intro">Seleziona un quiz per iniziare.</p>
+
+    <div id="quiz_list"></div>
+
+  </div>
+
+  <script src="/static/script.js"></script>
+  <script>
+    var prof = localStorage.getItem("professore");
+
+    fetch("/get_quiz_prof/" + prof)
+      .then(res => res.json())
+      .then(data => {
+        var div = document.getElementById("quiz_list");
+
+        if (data.length === 0) {
+          div.innerHTML = '<p>Nessun quiz disponibile al momento.</p>';
+          return;
+        }
+
+        for (var i = 0; i < data.length; i++) {
+          var q = data[i];
+          var card = document.createElement("div");
+          card.className = "quiz_card";
+          card.innerHTML =
+            '<div>' +
+              '<h3>' + q.titolo + '</h3>' +
+              '<p class="meta">' + (q.domande ? q.domande.length + ' domande' : '') + '</p>' +
+            '</div>' +
+            '<button onclick="startQuiz(\'' + q.titolo + '\')">Inizia</button>';
+          div.appendChild(card);
+        }
+      });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quizzy – Docente</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+  <header class="topbar">
+    <span class="logo">Quizzy</span>
+    <span class="badge">Docente</span>
+  </header>
+
+  <div class="container">
+
+    <h1>Dashboard</h1>
+    <p class="page-intro">Gestisci i tuoi quiz e consulta i risultati degli studenti.</p>
+
+    <!-- I tuoi quiz -->
+    <h2>I tuoi quiz</h2>
+    <div id="quiz_docente"></div>
+
+    <hr>
+
+    <!-- Crea quiz -->
+    <div class="panel">
+      <h2 style="margin-top:0;">Crea un nuovo quiz</h2>
+      <input type="text" id="titolo_quiz" placeholder="Titolo del quiz">
+      <button onclick="createQuiz()" style="margin-top:4px;">Crea quiz</button>
+    </div>
+
+    <hr>
+
+    <!-- Aggiungi domanda -->
+    <div class="panel">
+      <h2 style="margin-top:0;">Aggiungi domanda</h2>
+      <input id="quiz_nome" placeholder="Titolo del quiz a cui aggiungere">
+      <input id="domanda" placeholder="Testo della domanda">
+      <input id="op1" placeholder="Opzione 1">
+      <input id="op2" placeholder="Opzione 2">
+      <input id="op3" placeholder="Opzione 3">
+      <input id="corretta" type="number" placeholder="Indice risposta corretta (0, 1, 2…)">
+      <button onclick="addQuestion()" style="margin-top:4px;">Aggiungi domanda</button>
+    </div>
+
+    <hr>
+
+    <!-- Risultati -->
+    <h2>Risultati</h2>
+    <div id="risultati"></div>
+
+  </div>
+
+  <script src="/static/script.js"></script>
+  <script>
+    var docente = localStorage.getItem("username");
+    caricaQuiz();
+  </script>
+
+</body>
+</html>
