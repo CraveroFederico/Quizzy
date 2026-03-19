@@ -25,7 +25,6 @@ def register():
     username = data["username"]
     password = data["password"]
     ruolo = data["ruolo"]
-    professore = data.get("professore", "")
 
     user = utenti_collection.find_one({"username": username})
 
@@ -38,8 +37,6 @@ def register():
         "ruolo": ruolo
     }
 
-    if ruolo == "studente":
-        nuovo_utente["professore"] = professore
 
     utenti_collection.insert_one(nuovo_utente)
 
@@ -187,6 +184,16 @@ def get_quiz_prof(prof):
     quiz = list(db["quiz"].find({"creatore": prof}, {"_id":0}))
 
     return jsonify(quiz)
+
+@app.route("/get_professori")
+def get_professori():
+
+    prof = list(db["utenti"].find(
+        {"ruolo": "docente"},
+        {"_id": 0, "username": 1}
+    ))
+
+    return jsonify(prof)
 
 @app.route("/dashboard_studente")
 def dashboard_studente():

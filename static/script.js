@@ -3,7 +3,6 @@ function register() {
     var username = document.getElementById("reg_username").value
     var password = document.getElementById("reg_password").value
     var ruolo = document.getElementById("reg_ruolo").value
-    var professore = document.getElementById("reg_prof").value
 
     fetch("/register", {
 
@@ -16,7 +15,6 @@ function register() {
             username: username,
             password: password,
             ruolo: ruolo,
-            professore: professore
         })
 
     })
