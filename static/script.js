@@ -1,3 +1,11 @@
+window.onload = function(){
+
+    aggiungiOpzione()
+    aggiungiOpzione()
+    aggiungiOpzione()
+
+}
+
 function register() {
 
     var username = document.getElementById("reg_username").value
@@ -103,9 +111,17 @@ function addQuestion() {
     var titolo = document.getElementById("quiz_nome").value
     var domanda = document.getElementById("domanda").value
 
-    var op1 = document.getElementById("op1").value
-    var op2 = document.getElementById("op2").value
-    var op3 = document.getElementById("op3").value
+    var opzioni = []
+
+    for(var i=0;i<contatoreOpzioni;i++){
+
+        var val = document.getElementById("op"+i).value
+
+        if(val !== ""){
+            opzioni.push(val)
+        }
+
+    }
 
     var corretta = parseInt(document.getElementById("corretta").value)
 
@@ -119,16 +135,33 @@ function addQuestion() {
 
             titolo: titolo,
             testo: domanda,
-            opzioni: [op1, op2, op3],
+            opzioni: opzioni,
             corretta: corretta
 
         })
 
     })
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById("msg").innerText = data.message
-        })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById("msg").innerText = data.message
+    })
+
+}
+
+var contatoreOpzioni = 0
+
+function aggiungiOpzione(){
+
+    var div = document.getElementById("opzioni_container")
+
+    var input = document.createElement("input")
+
+    input.placeholder = "Opzione " + contatoreOpzioni
+    input.id = "op" + contatoreOpzioni
+
+    div.appendChild(input)
+
+    contatoreOpzioni++
 
 }
 
