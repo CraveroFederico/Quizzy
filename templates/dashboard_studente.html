@@ -74,13 +74,33 @@
 
             var q = data[i]
 
-            var card = document.createElement("div")
-            card.className = "quiz_card"
 
-            card.innerHTML =
-              "<h3>" + q.titolo + "</h3>" +
-              "<button onclick='startQuiz(\"" + q.titolo + "\")'>Inizia</button>"
+            var studente = localStorage.getItem("username")
 
+            fetch("/check_quiz_done/" + q.titolo + "/" + studente)
+              .then(res => res.json())
+              .then(check => {
+
+                var card = document.createElement("div")
+                card.className = "quiz_card"
+
+                if (check.done) {
+
+                  card.innerHTML =
+                    "<h3>" + q.titolo + "</h3>" +
+                    "<p style='color:green; font-weight:bold;'>✔ Già completato</p>"
+
+                } else {
+
+                  card.innerHTML =
+                    "<h3>" + q.titolo + "</h3>" +
+                    "<button onclick='startQuiz(\"" + q.titolo + "\")'>Inizia</button>"
+
+                }
+
+                div.appendChild(card)
+
+              })
             div.appendChild(card)
 
           }

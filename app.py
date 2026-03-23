@@ -151,6 +151,19 @@ def submit_quiz():
         "totale": totale
     })
 
+@app.route("/check_quiz_done/<quiz>/<studente>")
+def check_quiz_done(quiz, studente):
+
+    res = db["risultati"].find_one({
+        "quiz": quiz,
+        "studente": studente
+    })
+
+    if res:
+        return jsonify({"done": True})
+    else:
+        return jsonify({"done": False})
+
 @app.route("/get_results/<titolo>")
 def get_results(titolo):
 
