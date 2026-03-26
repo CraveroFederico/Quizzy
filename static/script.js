@@ -77,6 +77,14 @@ function login() {
         })
 }
 
+function logout(){
+
+    localStorage.clear()
+
+    window.location.href = "/"
+
+}
+
 function createQuiz() {
 
     var titolo = document.getElementById("titolo_quiz").value
