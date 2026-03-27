@@ -40,82 +40,71 @@
 
     var div = document.getElementById("quiz_list")
 
-    // 1️⃣ carica professori
+// 1️⃣ Funzione per caricare la lista professori
+function mostraSceltaProfessore() {
     fetch("/get_professori")
-      .then(res => res.json())
-      .then(professori => {
+        .then(res => res.json())
+        .then(professori => {
+            div.innerHTML = "<h3>Scegli un professore</h3>"
 
-        div.innerHTML = "<h3>Scegli un professore</h3>"
+            professori.forEach(p => {
+                var btn = document.createElement("button")
+                btn.innerText = p.username
+                btn.className = "btn btn-warning m-2"
+                btn.onclick = function () {
+                    caricaQuizProf(this.innerText)
+                }
+                div.appendChild(btn)
+            })
+        })
+}
 
-        for (var i = 0; i < professori.length; i++) {
+// Avvio iniziale
+mostraSceltaProfessore()
 
-          var p = professori[i]
+// 2️⃣ Carica quiz di un professore (con tasto indietro)
+function caricaQuizProf(prof) {
+    localStorage.setItem("professore", prof)
+    var studente = localStorage.getItem("username")
 
-          var btn = document.createElement("button")
-          btn.innerText = p.username
-          btn.className = "btn btn-warning m-2"
-
-          btn.onclick = function () {
-
-            caricaQuizProf(this.innerText)
-
-          }
-
-          div.appendChild(btn)
-
-        }
-
-      })
-
-    // 2️⃣ carica quiz di un professore
-    function caricaQuizProf(prof) {
-
-      localStorage.setItem("professore", prof)
-
-      fetch("/get_quiz_prof/" + prof)
+    fetch("/get_quiz_prof/" + prof)
         .then(res => res.json())
         .then(data => {
+            // Puliamo il div e aggiungiamo il tasto per tornare ai professori
+            div.innerHTML = "<h3>Quiz di " + prof + "</h3>"
+            
+            var btnIndietro = document.createElement("button")
+            btnIndietro.innerHTML = "<i class='bi bi-arrow-left'></i> Torna ai professori"
+            btnIndietro.className = "btn btn-secondary mb-3"
+            btnIndietro.onclick = mostraSceltaProfessore // Richiama la funzione 1
+            
+            div.appendChild(btnIndietro)
 
-          div.innerHTML = "<h3>Quiz di " + prof + "</h3>"
+            // Contenitore per le card (per non metterle sopra al tasto indietro)
+            var containerCards = document.createElement("div")
+            div.appendChild(containerCards)
 
-          for (var i = 0; i < data.length; i++) {
+            data.forEach(q => {
+                fetch("/check_quiz_done/" + q.titolo + "/" + studente)
+                    .then(res => res.json())
+                    .then(check => {
+                        var card = document.createElement("div")
+                        card.className = "quiz_card mb-3"
 
-            var q = data[i]
-
-
-            var studente = localStorage.getItem("username")
-
-            fetch("/check_quiz_done/" + q.titolo + "/" + studente)
-              .then(res => res.json())
-              .then(check => {
-
-                var card = document.createElement("div")
-                card.className = "quiz_card"
-
-                if (check.done) {
-
-                  card.innerHTML =
-                    "<h3>" + q.titolo + "</h3>" +
-                    "<p style='color:green; font-weight:bold;'>✔ Già completato</p>"
-
-                } else {
-
-                  card.innerHTML =
-                    "<h3>" + q.titolo + "</h3>" +
-                    "<button onclick='startQuiz(\"" + q.titolo + "\")'>Inizia</button>"
-
-                }
-
-                div.appendChild(card)
-
-              })
-    
-
-          }
-
+                        if (check.done) {
+                            card.innerHTML = 
+                                "<h3>" + q.titolo + "</h3>" +
+                                "<p style='color:green; font-weight:bold;'>✔ Già completato</p>"
+                        } else {
+                            card.innerHTML = 
+                                "<h3>" + q.titolo + "</h3>" +
+                                "<button class='btn btn-primary' onclick='startQuiz(\"" + q.titolo + "\")'>Inizia</button>"
+                        }
+                        containerCards.appendChild(card)
+                    })
+            })
         })
-
-    }
+}
 
   </script>
 
