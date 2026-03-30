@@ -3,22 +3,23 @@ from pymongo import MongoClient
 
 app = Flask(__name__)
 
-# Connessione MongoDB
+# Stringa locale
 client = MongoClient("mongodb://localhost:27017")
 
-# usa il database già creato
+# Stringa remoto
+
+# nome db
 db = client["Quizzy"]
 
 utenti_collection = db["utenti"]
 
 
-# Pagina di ingresso (Login/Registrazione)
+# Pagina di Login/Registrazione
 @app.route("/")
 def home():
     return render_template("index.html")
 
 
-# Registra un nuovo utente nel database
 @app.route("/register", methods=["POST"])
 def register():
 
@@ -45,7 +46,6 @@ def register():
     return jsonify({"message": "Utente registrato con successo!"})  
 
 
-# Verifica credenziali e avvia sessione
 @app.route("/login", methods=["POST"])
 def login():
 
@@ -76,7 +76,6 @@ def login():
         return jsonify({"error": "Credenziali non valide"}), 401
 
 
-# Crea un nuovo quiz vuoto (solo titolo)
 @app.route("/create_quiz", methods=["POST"])
 def create_quiz():
 
@@ -96,7 +95,6 @@ def create_quiz():
     return jsonify({"message": "Quiz creato"})
 
 
-# Aggiunge una singola domanda a un quiz esistente
 @app.route("/add_question", methods=["POST"])
 def add_question():
 
@@ -124,42 +122,46 @@ def add_question():
 # Calcola il punteggio e salva il risultato finale
 @app.route("/submit_quiz", methods=["POST"])
 def submit_quiz():
-
     data = request.get_json()
-
     titolo = data["titolo"]
     risposte = data["risposte"]
     studente = data["studente"]
     professore = data["professore"]
 
     quiz = db["quiz"].find_one({"titolo": titolo})
-
     domande = quiz["domande"]
 
     punteggio = 0
-
     for i in range(len(domande)):
-
-        if risposte[i] == domande[i]["corretta"]:
+        if i < len(risposte) and risposte[i] == domande[i]["corretta"]:
             punteggio += 1
 
     totale = len(domande)
+    # Calcolo voto in decimi arrotondato a due decimali
+    voto = round((punteggio * 10) / totale, 2) if totale > 0 else 0
 
     risultato = {
         "quiz": titolo,
         "studente": studente,
         "professore": professore,
         "punteggio": punteggio,
-        "totale": totale
+        "totale": totale,
+        "voto": voto  # Salviamo il voto effettivo
     }
 
     db["risultati"].insert_one(risultato)
 
     return jsonify({
         "punteggio": punteggio,
-        "totale": totale
+        "totale": totale,
+        "voto": voto
     })
 
+# Aggiungi questa rotta per recuperare i voti di uno studente specifico per il grafico
+@app.route("/get_student_stats/<studente>")
+def get_student_stats(studente):
+    stats = list(db["risultati"].find({"studente": studente}, {"_id": 0, "quiz": 1, "voto": 1}))
+    return jsonify(stats)
 
 # Elimina definitivamente un quiz e i suoi risultati
 @app.route("/delete_quiz", methods=["POST"])
@@ -242,19 +244,16 @@ def get_professori():
     return jsonify(prof)
 
 
-# Carica il template della dashboard studente
 @app.route("/dashboard_studente")
 def dashboard_studente():
     return render_template("dashboard_studente.html")
 
 
-# Carica il template della dashboard docente
 @app.route("/dashboard_docente")
 def dashboard_docente():
     return render_template("dashboard_docente.html")
 
 
-# Carica la pagina di svolgimento del quiz
 @app.route("/quiz")
 def quiz_page():
     return render_template("quiz.html")

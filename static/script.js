@@ -20,10 +20,10 @@ function register() {
             ruolo: ruolo,
         })
     })
-    .then(response => response.json())
-    .then(data => {
-        document.getElementById("message").innerText = data.message || data.error
-    })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById("message").innerText = data.message || data.error
+        })
 }
 
 // Gestisce l'accesso e salva i dati utente nel localStorage
@@ -39,25 +39,25 @@ function login() {
             password: password
         })
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.message) {
-            localStorage.setItem("username", data.username)
-            localStorage.setItem("ruolo", data.ruolo)
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                localStorage.setItem("username", data.username)
+                localStorage.setItem("ruolo", data.ruolo)
 
-            if (data.professore) {
-                localStorage.setItem("professore", data.professore)
-            }
+                if (data.professore) {
+                    localStorage.setItem("professore", data.professore)
+                }
 
-            if (data.ruolo === "studente") {
-                window.location.href = "/dashboard_studente"
+                if (data.ruolo === "studente") {
+                    window.location.href = "/dashboard_studente"
+                } else {
+                    window.location.href = "/dashboard_docente"
+                }
             } else {
-                window.location.href = "/dashboard_docente"
+                document.getElementById("message").innerText = data.error
             }
-        } else {
-            document.getElementById("message").innerText = data.error
-        }
-    })
+        })
 }
 
 // Pulisce la sessione e torna alla pagina di login
@@ -79,11 +79,11 @@ function createQuiz() {
             creatore: creatore
         })
     })
-    .then(response => response.json())
-    .then(data => {
-        document.getElementById("msg").innerText = data.message
-        caricaQuiz()
-    })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById("msg").innerText = data.message
+            caricaQuiz()
+        })
 }
 
 // Raccoglie i dati della domanda e la salva nel quiz selezionato
@@ -159,7 +159,7 @@ function submitQuiz() {
 
     while (document.getElementsByName("q" + i).length > 0) {
         var radios = document.getElementsByName("q" + i)
-        var rispostaData = -1 
+        var rispostaData = -1
         for (var j = 0; j < radios.length; j++) {
             if (radios[j].checked) {
                 rispostaData = parseInt(radios[j].value)
@@ -179,15 +179,16 @@ function submitQuiz() {
             professore: professore
         })
     })
-    .then(res => res.json())
-    .then(data => {
-        document.getElementById("result").innerText =
-            "Complimenti! Punteggio: " + data.punteggio + "/" + data.totale;
+        .then(res => res.json())
+        // Cerca questa parte dentro submitQuiz()
+        .then(data => {
+            document.getElementById("result").innerText =
+                "Complimenti! Voto: " + data.voto + "/10 (Punti: " + data.punteggio + "/" + data.totale + ")";
 
-        setTimeout(function () {
-            window.location.href = "/dashboard_studente";
-        }, 2000);
-    })
+            setTimeout(function () {
+                window.location.href = "/dashboard_studente";
+            }, 2000);
+        })
 }
 
 // Recupera e visualizza i voti di tutti gli studenti per un quiz
@@ -247,11 +248,11 @@ function eliminaQuiz(titolo) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ titolo: titolo })
         })
-        .then(res => res.json())
-        .then(data => {
-            alert(data.message);
-            caricaQuiz();
-        })
+            .then(res => res.json())
+            .then(data => {
+                alert(data.message);
+                caricaQuiz();
+            })
     }
 }
 
