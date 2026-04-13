@@ -1,263 +1,196 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, session, redirect, url_for
 from pymongo import MongoClient
+from werkzeug.security import generate_password_hash, check_password_hash
+import os
+from datetime import timedelta
+
 
 app = Flask(__name__)
 
-# Stringa locale
+# Imposta la durata a 30 minuti (o quanto preferisci)
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
+
+# CHIAVE SEGRETA: Indispensabile per le sessioni
+app.secret_key = "e3da31bf248d10bc2c82edbeff72bb59d4e02c7a72882b7b"
+
+# Configurazione DB
 client = MongoClient("mongodb://localhost:27017")
-
-# Stringa remoto
-
-# nome db
 db = client["Quizzy"]
-
 utenti_collection = db["utenti"]
 
-
-# Pagina di Login/Registrazione
+# --- ROTTE DI PAGINA ---
 @app.route("/")
 def home():
     return render_template("index.html")
 
+@app.route("/dashboard_studente")
+def dashboard_studente():
+    if "username" not in session: return redirect(url_for("home"))
+    return render_template("dashboard_studente.html")
+
+@app.route("/dashboard_docente")
+def dashboard_docente():
+    if "username" not in session or session["ruolo"] != "docente": return redirect(url_for("home"))
+    return render_template("dashboard_docente.html")
+
+@app.route("/quiz")
+def quiz_page():
+    if "username" not in session: return redirect(url_for("home"))
+    return render_template("quiz.html")
+
+# --- AUTENTICAZIONE ---
 
 @app.route("/register", methods=["POST"])
 def register():
-
     data = request.get_json()
-
     username = data["username"]
     password = data["password"]
     ruolo = data["ruolo"]
 
-    user = utenti_collection.find_one({"username": username})
-
-    if user:
+    if utenti_collection.find_one({"username": username}):
         return jsonify({"error": "Username già esistente"}), 400
+
+    # Cifriamo la password prima di salvarla
+    hashed_password = generate_password_hash(password)
 
     nuovo_utente = {
         "username": username,
-        "password": password,
+        "password": hashed_password,
         "ruolo": ruolo
     }
-
-
     utenti_collection.insert_one(nuovo_utente)
-
-    return jsonify({"message": "Utente registrato con successo!"})  
-
+    return jsonify({"message": "Utente registrato con successo!"})
 
 @app.route("/login", methods=["POST"])
 def login():
-
     data = request.get_json()
-
     username = data["username"]
     password = data["password"]
 
-    user = utenti_collection.find_one({
-        "username": username,
-        "password": password
-    })
+    user = utenti_collection.find_one({"username": username})
 
-    if user:
-
+    if user and check_password_hash(user["password"], password):
+        session.clear()
+        session["username"] = user["username"]
+        session["ruolo"] = user["ruolo"]
+        
         risposta = {
             "message": "Login riuscito!",
             "ruolo": user["ruolo"],
             "username": user["username"]
         }
-
-        if user["ruolo"] == "studente":
-            risposta["professore"] = user.get("professore", "")
-
         return jsonify(risposta)
+    
+    return jsonify({"error": "Credenziali non valide"}), 401
 
-    else:
-        return jsonify({"error": "Credenziali non valide"}), 401
+@app.route("/logout")
+def logout_route():
+    session.clear()
+    return redirect(url_for("home"))
 
+# --- GESTIONE QUIZ (DOCENTE) ---
 
 @app.route("/create_quiz", methods=["POST"])
 def create_quiz():
+    if "username" not in session or session["ruolo"] != "docente":
+        return jsonify({"error": "Azione non autorizzata"}), 403
 
     data = request.get_json()
-
-    titolo = data["titolo"]
-    creatore = data["creatore"]
-
     quiz = {
-        "titolo": titolo,
-        "creatore": creatore,
+        "titolo": data["titolo"],
+        "creatore": session["username"], # Preso da sessione sicura
         "domande": []
     }
-
     db["quiz"].insert_one(quiz)
-
     return jsonify({"message": "Quiz creato"})
-
 
 @app.route("/add_question", methods=["POST"])
 def add_question():
+    if "username" not in session or session["ruolo"] != "docente":
+        return jsonify({"error": "Azione non autorizzata"}), 403
 
     data = request.get_json()
-
-    titolo = data["titolo"]
-    testo = data["testo"]
-    opzioni = data["opzioni"]
-    corretta = data["corretta"]
-
     domanda = {
-        "testo": testo,
-        "opzioni": opzioni,
-        "corretta": corretta
+        "testo": data["testo"],
+        "opzioni": data["opzioni"],
+        "corretta": data["corretta"]
     }
-
-    db["quiz"].update_one(
-        {"titolo": titolo},
-        {"$push": {"domande": domanda}}
-    )
-
+    db["quiz"].update_one({"titolo": data["titolo"]}, {"$push": {"domande": domanda}})
     return jsonify({"message": "Domanda aggiunta"})
 
-
-# Calcola il punteggio e salva il risultato finale
-@app.route("/submit_quiz", methods=["POST"])
-def submit_quiz():
+@app.route("/delete_quiz", methods=["POST"])
+def delete_quiz():
+    if "username" not in session or session["ruolo"] != "docente":
+        return jsonify({"error": "Non autorizzato"}), 403
+    
     data = request.get_json()
     titolo = data["titolo"]
-    risposte = data["risposte"]
-    studente = data["studente"]
-    professore = data["professore"]
+    db["quiz"].delete_one({"titolo": titolo})
+    db["risultati"].delete_many({"quiz": titolo})
+    return jsonify({"message": "Quiz eliminato con successo"})
 
-    quiz = db["quiz"].find_one({"titolo": titolo})
+# --- SVOLGIMENTO E RISULTATI (STUDENTE/DOCENTE) ---
+
+@app.route("/submit_quiz", methods=["POST"])
+def submit_quiz():
+    if "username" not in session: return jsonify({"error": "Sessione scaduta"}), 401
+    
+    data = request.get_json()
+    quiz = db["quiz"].find_one({"titolo": data["titolo"]})
     domande = quiz["domande"]
 
     punteggio = 0
     for i in range(len(domande)):
-        if i < len(risposte) and risposte[i] == domande[i]["corretta"]:
+        if i < len(data["risposte"]) and data["risposte"][i] == domande[i]["corretta"]:
             punteggio += 1
 
-    totale = len(domande)
-    # Calcolo voto in decimi arrotondato a due decimali
-    voto = round((punteggio * 10) / totale, 2) if totale > 0 else 0
-
+    voto = round((punteggio * 10) / len(domande), 2) if len(domande) > 0 else 0
+    
     risultato = {
-        "quiz": titolo,
-        "studente": studente,
-        "professore": professore,
+        "quiz": data["titolo"],
+        "studente": session["username"], # Sicurezza: usa sessione, non localStorage
+        "professore": quiz["creatore"],
         "punteggio": punteggio,
-        "totale": totale,
-        "voto": voto  # Salviamo il voto effettivo
-    }
-
-    db["risultati"].insert_one(risultato)
-
-    return jsonify({
-        "punteggio": punteggio,
-        "totale": totale,
+        "totale": len(domande),
         "voto": voto
-    })
+    }
+    db["risultati"].insert_one(risultato)
+    return jsonify({"punteggio": punteggio, "totale": len(domande), "voto": voto})
 
-# Aggiungi questa rotta per recuperare i voti di uno studente specifico per il grafico
 @app.route("/get_student_stats/<studente>")
 def get_student_stats(studente):
     stats = list(db["risultati"].find({"studente": studente}, {"_id": 0, "quiz": 1, "voto": 1}))
     return jsonify(stats)
 
-# Elimina definitivamente un quiz e i suoi risultati
-@app.route("/delete_quiz", methods=["POST"])
-def delete_quiz():
-    data = request.get_json()
-    titolo = data["titolo"]
-    
-    db["quiz"].delete_one({"titolo": titolo})
-    db["risultati"].delete_many({"quiz": titolo})
-    
-    return jsonify({"message": "Quiz eliminato con successo"})
-
-
-# Controlla se uno studente ha già svolto un certo quiz
 @app.route("/check_quiz_done/<quiz>/<studente>")
 def check_quiz_done(quiz, studente):
+    res = db["risultati"].find_one({"quiz": quiz, "studente": studente})
+    return jsonify({"done": bool(res)})
 
-    res = db["risultati"].find_one({
-        "quiz": quiz,
-        "studente": studente
-    })
-
-    if res:
-        return jsonify({"done": True})
-    else:
-        return jsonify({"done": False})
-
-
-# Recupera tutti i voti degli studenti per un quiz
 @app.route("/get_results/<titolo>")
 def get_results(titolo):
-
-    risultati = list(db["risultati"].find(
-        {"quiz": titolo},
-        {"_id":0}
-    ))
-
+    risultati = list(db["risultati"].find({"quiz": titolo}, {"_id":0}))
     return jsonify(risultati)
 
-
-# Lista di tutti i quiz creati da un docente specifico
 @app.route("/get_quiz_docente/<docente>")
 def get_quiz_docente(docente):
-
-    quiz = list(db["quiz"].find(
-        {"creatore": docente},
-        {"_id":0}
-    ))
-
+    quiz = list(db["quiz"].find({"creatore": docente}, {"_id":0}))
     return jsonify(quiz)
 
-
-# Recupera i dati completi (domande/opzioni) di un singolo quiz
 @app.route("/get_quiz/<titolo>")
 def get_quiz(titolo):
-
     quiz = db["quiz"].find_one({"titolo": titolo}, {"_id":0})
-
     return jsonify(quiz)
 
-
-# Lista quiz filtrata per il professore scelto dallo studente
 @app.route("/get_quiz_prof/<prof>")
 def get_quiz_prof(prof):
-
     quiz = list(db["quiz"].find({"creatore": prof}, {"_id":0}))
-
     return jsonify(quiz)
 
-
-# Recupera l'elenco di tutti gli utenti con ruolo docente
 @app.route("/get_professori")
 def get_professori():
-
-    prof = list(db["utenti"].find(
-        {"ruolo": "docente"},
-        {"_id": 0, "username": 1}
-    ))
-
+    prof = list(db["utenti"].find({"ruolo": "docente"}, {"_id": 0, "username": 1}))
     return jsonify(prof)
-
-
-@app.route("/dashboard_studente")
-def dashboard_studente():
-    return render_template("dashboard_studente.html")
-
-
-@app.route("/dashboard_docente")
-def dashboard_docente():
-    return render_template("dashboard_docente.html")
-
-
-@app.route("/quiz")
-def quiz_page():
-    return render_template("quiz.html")
-
 
 if __name__ == "__main__":
     app.run(debug=True)

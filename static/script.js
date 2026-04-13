@@ -6,65 +6,55 @@ window.onload = function () {
 }
 
 // Invia i dati di registrazione al server
+// Invia i dati di registrazione al server
 function register() {
-    var username = document.getElementById("reg_username").value
-    var password = document.getElementById("reg_password").value
-    var ruolo = document.getElementById("reg_ruolo").value
+    var username = document.getElementById("reg_username").value;
+    var password = document.getElementById("reg_password").value;
+    var ruolo = document.getElementById("reg_ruolo").value;
+
+    if(!username || !password) { alert("Riempi tutti i campi!"); return; }
 
     fetch("/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            username: username,
-            password: password,
-            ruolo: ruolo,
-        })
+        body: JSON.stringify({ username, password, ruolo })
     })
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById("message").innerText = data.message || data.error
-        })
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById("message").innerText = data.message || data.error;
+    });
 }
 
-// Gestisce l'accesso e salva i dati utente nel localStorage
 function login() {
-    var username = document.getElementById("login_username").value
-    var password = document.getElementById("login_password").value
+    var username = document.getElementById("login_username").value;
+    var password = document.getElementById("login_password").value;
 
     fetch("/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            username: username,
-            password: password
-        })
+        body: JSON.stringify({ username, password })
     })
-        .then(response => response.json())
-        .then(data => {
-            if (data.message) {
-                localStorage.setItem("username", data.username)
-                localStorage.setItem("ruolo", data.ruolo)
+    .then(res => res.json())
+    .then(data => {
+        if (data.message) {
+            // Salviamo solo per scopi estetici (es. "Benvenuto Username")
+            localStorage.setItem("username", data.username);
+            localStorage.setItem("ruolo", data.ruolo);
 
-                if (data.professore) {
-                    localStorage.setItem("professore", data.professore)
-                }
-
-                if (data.ruolo === "studente") {
-                    window.location.href = "/dashboard_studente"
-                } else {
-                    window.location.href = "/dashboard_docente"
-                }
-            } else {
-                document.getElementById("message").innerText = data.error
-            }
-        })
+            window.location.href = (data.ruolo === "studente") ? "/dashboard_studente" : "/dashboard_docente";
+        } else {
+            document.getElementById("message").innerText = data.error;
+        }
+    });
 }
 
-// Pulisce la sessione e torna alla pagina di login
 function logout() {
-    localStorage.clear()
-    window.location.href = "/"
+    localStorage.clear();
+    window.location.href = "/logout"; // Chiama la rotta server che pulisce la sessione
 }
+
+// Tutte le altre funzioni (createQuiz, addQuestion, etc.) rimangono uguali, 
+// ma ora sono protette dal server che controlla la sessione automaticamente.
 
 // Crea un nuovo contenitore quiz nel database
 function createQuiz() {
