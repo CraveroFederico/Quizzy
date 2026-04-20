@@ -99,6 +99,33 @@
     caricaQuiz();
   </script>
 
+  <div class="modal fade" id="modalModifica" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Modifica Quiz</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="edit_titolo_originale">
+          <div class="mb-3">
+            <label class="form-label fw-bold">Titolo Quiz</label>
+            <input type="text" id="edit_titolo_nuovo" class="form-control">
+          </div>
+          <hr>
+          <div id="edit_domande_container">
+          </div>
+          <button type="button" class="btn btn-sm btn-outline-primary mt-3" onclick="aggiungiNuovaDomandaInEdit()">
+            <i class="bi bi-plus-circle"></i> Aggiungi una nuova domanda
+          </button>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+          <button type="button" class="btn btn-primary" onclick="salvaModificheQuiz()">Salva Tutte le Modifiche</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </body>
 
 </html>

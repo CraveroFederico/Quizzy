@@ -98,11 +98,28 @@ def create_quiz():
     data = request.get_json()
     quiz = {
         "titolo": data["titolo"],
-        "creatore": session["username"], # Preso da sessione sicura
-        "domande": []
+        "creatore": session["username"],
+        "domande": [],
+        "attivo": False  # Il quiz nasce "chiuso"
     }
     db["quiz"].insert_one(quiz)
-    return jsonify({"message": "Quiz creato"})
+    return jsonify({"message": "Quiz creato (non ancora visibile agli studenti)"})
+
+@app.route("/toggle_quiz_status", methods=["POST"])
+def toggle_quiz_status():
+    if "username" not in session or session["ruolo"] != "docente":
+        return jsonify({"error": "Non autorizzato"}), 403
+    
+    data = request.get_json()
+    titolo = data["titolo"]
+    stato_attuale = data["attivo"]
+    
+    # Invertiamo lo stato
+    nuovo_stato = not stato_attuale
+    db["quiz"].update_one({"titolo": titolo}, {"$set": {"attivo": nuovo_stato}})
+    
+    msg = "Quiz somministrato agli studenti" if nuovo_stato else "Quiz rimosso dalla vista studenti"
+    return jsonify({"message": msg, "nuovo_stato": nuovo_stato})
 
 @app.route("/add_question", methods=["POST"])
 def add_question():
@@ -128,6 +145,29 @@ def delete_quiz():
     db["quiz"].delete_one({"titolo": titolo})
     db["risultati"].delete_many({"quiz": titolo})
     return jsonify({"message": "Quiz eliminato con successo"})
+
+
+@app.route("/update_quiz_full", methods=["POST"])
+def update_quiz_full():
+    if "username" not in session or session["ruolo"] != "docente":
+        return jsonify({"error": "Non autorizzato"}), 403
+    
+    data = request.get_json()
+    titolo_originale = data["titolo_originale"]
+    nuovo_titolo = data["nuovo_titolo"]
+    nuove_domande = data["domande"]
+
+    # 1. Aggiorna il quiz (Titolo e Domande)
+    db["quiz"].update_one(
+        {"titolo": titolo_originale},
+        {"$set": {"titolo": nuovo_titolo, "domande": nuove_domande}}
+    )
+    
+    # 2. Se il titolo è cambiato, aggiorna i riferimenti nei risultati
+    if titolo_originale != nuovo_titolo:
+        db["risultati"].update_many({"quiz": titolo_originale}, {"$set": {"quiz": nuovo_titolo}})
+    
+    return jsonify({"message": "Quiz aggiornato con successo!"})
 
 # --- SVOLGIMENTO E RISULTATI (STUDENTE/DOCENTE) ---
 
@@ -157,6 +197,13 @@ def submit_quiz():
     db["risultati"].insert_one(risultato)
     return jsonify({"punteggio": punteggio, "totale": len(domande), "voto": voto})
 
+# Esempio di come dovresti filtrare nella rotta che usa lo studente
+@app.route("/get_available_quizzes")
+def get_available_quizzes():
+    # Trova solo i quiz dove attivo è True
+    quiz_pubblici = list(db["quiz"].find({"attivo": True}, {"_id": 0, "titolo": 1, "creatore": 1}))
+    return jsonify(quiz_pubblici)
+
 @app.route("/get_student_stats/<studente>")
 def get_student_stats(studente):
     stats = list(db["risultati"].find({"studente": studente}, {"_id": 0, "quiz": 1, "voto": 1}))
@@ -184,8 +231,9 @@ def get_quiz(titolo):
 
 @app.route("/get_quiz_prof/<prof>")
 def get_quiz_prof(prof):
-    quiz = list(db["quiz"].find({"creatore": prof}, {"_id":0}))
-    return jsonify(quiz)
+    # Filtriamo: cerchiamo i quiz di quel professore MA solo se 'attivo' è True
+    quiz_attivi = list(db["quiz"].find({"creatore": prof, "attivo": True}, {"_id": 0}))
+    return jsonify(quiz_attivi)
 
 @app.route("/get_professori")
 def get_professori():

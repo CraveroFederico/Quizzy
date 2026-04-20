@@ -111,42 +111,50 @@
 
     // 2. Carica quiz del professore
     function caricaQuizProf(prof) {
-        localStorage.setItem("professore", prof)
-        var studente = localStorage.getItem("username")
-        fetch("/get_quiz_prof/" + prof)
-            .then(res => res.json())
-            .then(data => {
-                div.innerHTML = `
-                    <div class='d-flex align-items-center mb-4'>
-                        <button class='btn btn-sm btn-secondary me-3' onclick='mostraSceltaProfessore()'>
-                            <i class='bi bi-arrow-left'></i>
-                        </button>
-                        <h3 class='m-0'>Quiz di ${prof}</h3>
-                    </div>`
-                
-                var containerCards = document.createElement("div")
-                div.appendChild(containerCards)
+    localStorage.setItem("professore", prof)
+    var studente = localStorage.getItem("username")
+    
+    fetch("/get_quiz_prof/" + prof)
+        .then(res => res.json())
+        .then(data => {
+            div.innerHTML = `
+                <div class='d-flex align-items-center mb-4'>
+                    <button class='btn btn-sm btn-secondary me-3' onclick='mostraSceltaProfessore()'>
+                        <i class='bi bi-arrow-left'></i>
+                    </button>
+                    <h3 class='m-0'>Quiz di ${prof}</h3>
+                </div>`;
+            
+            if (data.length === 0) {
+                div.innerHTML += `<div class="alert alert-info shadow-sm">
+                    <i class="bi bi-info-circle me-2"></i> Questo professore non ha ancora somministrato alcun quiz.
+                </div>`;
+                return;
+            }
 
-                data.forEach(q => {
-                    fetch("/check_quiz_done/" + q.titolo + "/" + studente)
-                        .then(res => res.json())
-                        .then(check => {
-                            var card = document.createElement("div")
-                            card.className = "quiz_card mb-3 d-flex justify-content-between align-items-center p-3 shadow-sm border-0"
-                            card.style.background = "white";
+            var containerCards = document.createElement("div")
+            div.appendChild(containerCards)
 
-                            if (check.done) {
-                                card.innerHTML = `<strong>${q.titolo}</strong> 
-                                    <span class='text-success fw-bold'><i class='bi bi-check-circle-fill'></i> Completato</span>`
-                            } else {
-                                card.innerHTML = `<strong>${q.titolo}</strong> 
-                                    <button class='btn btn-primary btn-sm px-4' onclick='startQuiz("${q.titolo}")'>Inizia</button>`
-                            }
-                            containerCards.appendChild(card)
-                        })
-                })
+            data.forEach(q => {
+                fetch("/check_quiz_done/" + q.titolo + "/" + studente)
+                    .then(res => res.json())
+                    .then(check => {
+                        var card = document.createElement("div")
+                        card.className = "quiz_card mb-3 d-flex justify-content-between align-items-center p-3 shadow-sm border-0"
+                        card.style.background = "white";
+
+                        if (check.done) {
+                            card.innerHTML = `<strong>${q.titolo}</strong> 
+                                <span class='text-success fw-bold'><i class='bi bi-check-circle-fill'></i> Completato</span>`
+                        } else {
+                            card.innerHTML = `<strong>${q.titolo}</strong> 
+                                <button class='btn btn-primary btn-sm px-4' onclick='startQuiz("${q.titolo}")'>Inizia</button>`
+                        }
+                        containerCards.appendChild(card)
+                    })
             })
-    }
+        })
+}
 
     // 3. Genera Statistiche (Grafico + Lista con voti colorati)
     function generaStatistiche() {
