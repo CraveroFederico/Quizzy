@@ -1,93 +1,152 @@
 <!DOCTYPE html>
 <html lang="it">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quizzy - Docente</title>
+  <title>Quizzy — Docente</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <link rel="stylesheet" href="/static/style.css">
-</head>
+  <style>
+    .section-rule {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin: 40px 0 20px;
+    }
+    .section-rule h2 {
+      margin: 0;
+      white-space: nowrap;
+    }
+    .section-rule::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--rule);
+    }
 
+    .action-strip {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .collapse-card {
+      background: var(--surface);
+      border: 1px solid var(--rule);
+      border-radius: var(--r-md);
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+
+    .collapse-card .panel {
+      border: none;
+      border-radius: 0;
+      border-top: 1px solid var(--rule);
+      margin-bottom: 0;
+    }
+
+    .field-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--ink-3);
+      font-family: var(--font-mono);
+      display: block;
+      margin: 16px 0 5px;
+    }
+    .field-label:first-child { margin-top: 0; }
+
+    #msg { font-size: .82rem; color: var(--ok); margin-top: 10px; font-family: var(--font-mono); }
+  </style>
+</head>
 <body>
 
   <header class="topbar slide-down d-flex justify-content-between align-items-center">
-
-    <div>
+    <div style="display:flex;align-items:center;gap:14px;">
       <span class="logo">Quizzy</span>
-      <span class="badge">Dashboard</span>
+      <span class="badge">Docente</span>
     </div>
-
-    <button onclick="logout()" class="btn btn-warning">
-      <i class="bi bi-box-arrow-right"></i> Logout
+    <button onclick="logout()" class="btn-warning" style="font-size:0.8rem;padding:8px 16px;border-radius:var(--r-sm);">
+      <i class="bi bi-box-arrow-right" style="font-size:13px;"></i> Esci
     </button>
-
   </header>
 
   <div class="container">
 
-    <h1 class="fade-in">Dashboard</h1>
-    <p class="page-intro fade-in fade-delay-1">Gestisci i tuoi quiz e consulta i risultati degli studenti.</p>
+    <div class="fade-in" style="margin-top:4px;">
+      <h1>Dashboard</h1>
+      <p class="page-intro fade-in fade-delay-1">Gestisci quiz e consulta i risultati degli studenti.</p>
+    </div>
 
     <!-- I tuoi quiz -->
-    <h2 class="fade-in fade-delay-1"><i class="bi bi-collection me-2"></i>I tuoi quiz</h2>
+    <div class="section-rule fade-in fade-delay-1">
+      <h2>I tuoi quiz</h2>
+    </div>
     <div id="quiz_docente" class="fade-in fade-delay-2"></div>
 
-    <hr>
+    <!-- Azioni rapide -->
+    <div class="section-rule fade-in fade-delay-2">
+      <h2>Gestione</h2>
+    </div>
 
-    <!-- Bottone per aprire la sezione Crea quiz -->
-    <div class="fade-in fade-delay-2">
-      <button class="btn-toggle-section" type="button" data-bs-toggle="collapse" data-bs-target="#creaQuizSection"
-        aria-expanded="false" aria-controls="creaQuizSection">
-        <i class="bi bi-plus-circle me-2"></i>Crea un nuovo quiz
+    <div class="action-strip fade-in fade-delay-2">
+      <button class="btn-toggle-section secondary" type="button"
+        data-bs-toggle="collapse" data-bs-target="#creaQuizSection"
+        style="width:auto;padding:11px 20px;font-size:.82rem;">
+        <i class="bi bi-plus" style="font-size:14px;"></i> Crea quiz
+      </button>
+      <button class="btn-toggle-section secondary" type="button"
+        data-bs-toggle="collapse" data-bs-target="#aggiungiDomandaSection"
+        style="width:auto;padding:11px 20px;font-size:.82rem;">
+        <i class="bi bi-patch-question" style="font-size:14px;"></i> Aggiungi domanda
       </button>
     </div>
 
+    <!-- Crea quiz -->
     <div class="collapse" id="creaQuizSection">
-      <div class="panel mt-3">
-        <h2 style="margin-top:0;"><i class="bi bi-pencil-square me-2"></i>Crea un nuovo quiz</h2>
-        <input type="text" id="titolo_quiz" placeholder="Titolo del quiz">
-        <button onclick="createQuiz()" style="margin-top:4px;">
-          <i class="bi bi-check-lg"></i> Crea quiz
+      <div class="panel" style="margin-top:8px;">
+        <span class="field-label">Titolo del quiz</span>
+        <input type="text" id="titolo_quiz" placeholder="Es. Algebra lineare — capitolo 3">
+        <button onclick="createQuiz()" style="margin-top:16px;">
+          <i class="bi bi-check" style="font-size:14px;"></i> Crea quiz
         </button>
       </div>
     </div>
 
-    <hr>
-
-    <!-- Bottone per aprire la sezione Aggiungi domanda -->
-    <div class="fade-in fade-delay-2">
-      <button class="btn-toggle-section" type="button" data-bs-toggle="collapse"
-        data-bs-target="#aggiungiDomandaSection" aria-expanded="false" aria-controls="aggiungiDomandaSection">
-        <i class="bi bi-patch-question me-2"></i>Aggiungi domanda
-      </button>
-    </div>
-
+    <!-- Aggiungi domanda -->
     <div class="collapse" id="aggiungiDomandaSection">
-      <div class="panel mt-3">
-        <h2 style="margin-top:0;"><i class="bi bi-patch-question me-2"></i>Aggiungi domanda</h2>
-        <p class="small text-muted">Scrivi l'opzione e clicca il pallino a sinistra per indicare quella corretta.</p>
+      <div class="panel" style="margin-top:8px;">
+        <p style="font-size:.8rem;color:var(--ink-4);margin-bottom:18px;font-family:var(--font-mono);">
+          Clicca il pallino a sinistra di un'opzione per indicare la risposta corretta.
+        </p>
 
-        <input id="quiz_nome" placeholder="Titolo del quiz" class="form-control mb-2">
-        <input id="domanda" placeholder="Testo della domanda" class="form-control mb-3">
+        <span class="field-label">Quiz di riferimento</span>
+        <input id="quiz_nome" placeholder="Titolo del quiz esistente">
 
+        <span class="field-label">Testo della domanda</span>
+        <input id="domanda" placeholder="Scrivi la domanda">
+
+        <span class="field-label">Opzioni di risposta</span>
         <div id="opzioni_container"></div>
-        <button onclick="aggiungiOpzione()" type="button" class="btn btn-sm btn-outline-secondary mb-3">
-          <i class="bi bi-plus-circle"></i> Aggiungi opzione
+        <button onclick="aggiungiOpzione()" type="button"
+          style="background:transparent;color:var(--ink-3);border:1px dashed var(--rule-dark);margin-top:6px;font-size:.8rem;padding:8px 14px;">
+          <i class="bi bi-plus" style="font-size:13px;"></i> Aggiungi opzione
         </button>
 
-        <button onclick="addQuestion()" class="btn btn-primary w-100">
-          <i class="bi bi-plus-lg"></i> Salva Domanda
+        <button onclick="addQuestion()" style="width:100%;justify-content:center;margin-top:20px;">
+          <i class="bi bi-floppy" style="font-size:13px;"></i> Salva domanda
         </button>
-        <p id="msg" class="mt-2 text-primary"></p>
+        <p id="msg"></p>
       </div>
     </div>
-
-    <hr>
 
     <!-- Risultati -->
-    <h2 class="fade-in fade-delay-2"><i class="bi bi-bar-chart-line me-2"></i>Risultati</h2>
+    <div class="section-rule fade-in fade-delay-3">
+      <h2>Risultati</h2>
+    </div>
     <div id="risultati" class="fade-in fade-delay-3"></div>
 
   </div>
@@ -99,33 +158,37 @@
     caricaQuiz();
   </script>
 
+  <!-- Modale modifica -->
   <div class="modal fade" id="modalModifica" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Modifica Quiz</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      <div class="modal-content" style="border:1px solid var(--rule);border-radius:var(--r-lg);box-shadow:none;">
+        <div class="modal-header" style="border-bottom:1px solid var(--rule);padding:20px 28px;">
+          <h5 class="modal-title" style="font-family:var(--font-display);font-weight:400;font-size:1.2rem;">Modifica quiz</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
-        <div class="modal-body">
+        <div class="modal-body" style="padding:24px 28px;">
           <input type="hidden" id="edit_titolo_originale">
-          <div class="mb-3">
-            <label class="form-label fw-bold">Titolo Quiz</label>
-            <input type="text" id="edit_titolo_nuovo" class="form-control">
-          </div>
-          <hr>
-          <div id="edit_domande_container">
-          </div>
-          <button type="button" class="btn btn-sm btn-outline-primary mt-3" onclick="aggiungiNuovaDomandaInEdit()">
-            <i class="bi bi-plus-circle"></i> Aggiungi una nuova domanda
+          <span class="field-label" style="margin-top:0;">Titolo quiz</span>
+          <input type="text" id="edit_titolo_nuovo">
+          <hr style="margin:20px 0;">
+          <div id="edit_domande_container"></div>
+          <button type="button" onclick="aggiungiNuovaDomandaInEdit()"
+            style="background:transparent;color:var(--ink-3);border:1px dashed var(--rule-dark);margin-top:10px;font-size:.8rem;padding:8px 14px;">
+            <i class="bi bi-plus" style="font-size:13px;"></i> Aggiungi domanda
           </button>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
-          <button type="button" class="btn btn-primary" onclick="salvaModificheQuiz()">Salva Tutte le Modifiche</button>
+        <div class="modal-footer" style="border-top:1px solid var(--rule);padding:16px 28px;gap:10px;">
+          <button type="button" data-bs-dismiss="modal"
+            style="background:transparent;color:var(--ink-2);border:1px solid var(--rule);font-size:.85rem;padding:9px 18px;">
+            Annulla
+          </button>
+          <button type="button" onclick="salvaModificheQuiz()" style="font-size:.85rem;padding:9px 18px;">
+            <i class="bi bi-floppy" style="font-size:13px;"></i> Salva modifiche
+          </button>
         </div>
       </div>
     </div>
   </div>
-</body>
 
+</body>
 </html>

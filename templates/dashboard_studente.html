@@ -1,220 +1,295 @@
 <!DOCTYPE html>
 <html lang="it">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quizzy - Studente</title>
+  <title>Quizzy — Studente</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <link rel="stylesheet" href="/static/style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    /* Layout extra-largo per far respirare i dati */
-    .container-wide {
-      max-width: 95%;
-      margin: 0 auto;
+    .section-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--rule);
+      padding-bottom: 12px;
+      margin-bottom: 20px;
     }
-    /* Card personalizzate per le statistiche */
-    .stats-card {
-      border-radius: 15px;
-      background: white;
-      padding: 25px;
-      height: 100%;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-      border: none;
+    .section-header h2 { margin: 0; }
+
+    .prof-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 16px;
+      background: var(--surface);
+      border: 1px solid var(--rule);
+      border-radius: 2px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--ink-2);
+      cursor: pointer;
+      transition: border-color .15s, color .15s;
+      font-family: var(--font-body);
     }
-    /* Badge voti personalizzati */
-    .voto-badge {
-      font-size: 0.9rem;
-      font-weight: bold;
-      padding: 8px 15px;
-      border-radius: 50px;
+    .prof-chip:hover { border-color: var(--ink); color: var(--ink); background: var(--paper); }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      color: var(--ink-3);
+      cursor: pointer;
+      font-family: var(--font-mono);
+      letter-spacing: 0.04em;
+      margin-bottom: 20px;
+      transition: color .12s;
+    }
+    .back-link:hover { color: var(--ink); }
+
+    .done-label {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: var(--ok);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .stats-label {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--ink-4);
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .history-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--rule);
+      font-size: 0.875rem;
+    }
+    .history-item:last-child { border-bottom: none; }
+
+    .empty-state {
+      text-align: center;
+      padding: 48px 20px;
+      color: var(--ink-4);
+      font-size: 0.85rem;
+      font-family: var(--font-mono);
+      letter-spacing: 0.04em;
     }
   </style>
 </head>
-
 <body>
 
   <header class="topbar slide-down d-flex justify-content-between align-items-center">
-    <div>
+    <div style="display:flex;align-items:center;gap:14px;">
       <span class="logo">Quizzy</span>
-      <span class="badge">Dashboard</span>
+      <span class="badge">Studente</span>
     </div>
-
-    <button onclick="logout()" class="btn btn-warning">
-      <i class="bi bi-box-arrow-right"></i> Logout
+    <button onclick="logout()" class="btn-warning" style="font-size:0.8rem;padding:8px 16px;border-radius:var(--r-sm);">
+      <i class="bi bi-box-arrow-right" style="font-size:13px;"></i> Esci
     </button>
   </header>
 
   <div class="container-wide mt-4">
 
-    <div class="mb-5">
-        <h1 class="fade-in fw-bold">I tuoi quiz</h1>
-        <p class="page-intro fade-in fade-delay-1 text-muted">Seleziona un professore e mettiti alla prova.</p>
-
-        <div id="quiz_list" class="fade-in fade-delay-2 mt-4">
-            </div>
+    <div class="mb-5 fade-in">
+      <h1>I tuoi quiz</h1>
+      <p class="page-intro fade-in fade-delay-1">Seleziona un professore per accedere ai quiz disponibili.</p>
+      <div id="quiz_list" class="fade-in fade-delay-2 mt-4"></div>
     </div>
 
-    <hr class="fade-in fade-delay-2 my-5">
+    <hr class="fade-in fade-delay-2">
 
     <div class="row fade-in fade-delay-3 g-4 pb-5">
-        
-        <div class="col-lg-8">
-            <div class="stats-card">
-                <h2 class="mb-4 text-warning fw-bold h4">
-                    <i class="bi bi-graph-up-arrow me-2"></i>Andamento Voti
-                </h2>
-                <div style="position: relative; height: 380px;">
-                    <canvas id="studentChart"></canvas>
-                </div>
-            </div>
-        </div>
 
-        <div class="col-lg-4">
-            <div class="stats-card">
-                <h2 class="mb-4 text-primary fw-bold h4">
-                    <i class="bi bi-clock-history me-2"></i>Ultimi 5 Quiz
-                </h2>
-                <ul id="lista_ultimi_quiz" class="list-group list-group-flush">
-                    <li class="list-group-item text-muted text-center py-5">Nessun quiz svolto finora</li>
-                </ul>
+      <div class="col-lg-8">
+        <div class="stats-card">
+          <div class="section-header">
+            <div>
+              <span class="stats-label">Andamento</span>
+              <h2 style="margin:0;font-size:0.875rem;font-weight:600;color:var(--ink);text-transform:none;letter-spacing:0;">Voti nel tempo</h2>
             </div>
+          </div>
+          <div style="position:relative;height:340px;">
+            <canvas id="studentChart"></canvas>
+          </div>
         </div>
+      </div>
+
+      <div class="col-lg-4">
+        <div class="stats-card">
+          <div class="section-header">
+            <div>
+              <span class="stats-label">Cronologia</span>
+              <h2 style="margin:0;font-size:0.875rem;font-weight:600;color:var(--ink);text-transform:none;letter-spacing:0;">Ultimi quiz svolti</h2>
+            </div>
+          </div>
+          <div id="lista_ultimi_quiz">
+            <div class="empty-state">Nessun quiz completato</div>
+          </div>
+        </div>
+      </div>
 
     </div>
-
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="/static/script.js"></script>
-  
   <script>
     var div = document.getElementById("quiz_list");
 
-    // 1. Carica lista professori
     function mostraSceltaProfessore() {
-        fetch("/get_professori")
-            .then(res => res.json())
-            .then(professori => {
-                div.innerHTML = "<h4 class='text-secondary mb-3'>Scegli un professore:</h4>"
-                professori.forEach(p => {
-                    var btn = document.createElement("button")
-                    btn.innerText = p.username
-                    btn.className = "btn btn-warning m-2 px-4 shadow-sm fw-bold"
-                    btn.onclick = function () { caricaQuizProf(this.innerText) }
-                    div.appendChild(btn)
-                })
-            })
+      fetch("/get_professori")
+        .then(res => res.json())
+        .then(professori => {
+          div.innerHTML = `<p style="font-size:.8rem;color:var(--ink-3);font-family:var(--font-mono);letter-spacing:.05em;margin-bottom:14px;">SELEZIONA PROFESSORE</p>`;
+          const wrap = document.createElement("div");
+          wrap.style.cssText = "display:flex;flex-wrap:wrap;gap:8px;";
+          professori.forEach(p => {
+            var btn = document.createElement("button");
+            btn.className = "prof-chip";
+            btn.innerHTML = `<i class="bi bi-person" style="font-size:13px;color:var(--ink-4);"></i> ${p.username}`;
+            btn.onclick = function () { caricaQuizProf(p.username); };
+            wrap.appendChild(btn);
+          });
+          div.appendChild(wrap);
+        });
     }
 
-    // 2. Carica quiz del professore
     function caricaQuizProf(prof) {
-    localStorage.setItem("professore", prof)
-    var studente = localStorage.getItem("username")
-    
-    fetch("/get_quiz_prof/" + prof)
+      localStorage.setItem("professore", prof);
+      var studente = localStorage.getItem("username");
+
+      fetch("/get_quiz_prof/" + prof)
         .then(res => res.json())
         .then(data => {
-            div.innerHTML = `
-                <div class='d-flex align-items-center mb-4'>
-                    <button class='btn btn-sm btn-secondary me-3' onclick='mostraSceltaProfessore()'>
-                        <i class='bi bi-arrow-left'></i>
-                    </button>
-                    <h3 class='m-0'>Quiz di ${prof}</h3>
-                </div>`;
-            
-            if (data.length === 0) {
-                div.innerHTML += `<div class="alert alert-info shadow-sm">
-                    <i class="bi bi-info-circle me-2"></i> Questo professore non ha ancora somministrato alcun quiz.
-                </div>`;
-                return;
-            }
+          div.innerHTML = `
+            <div class="back-link" onclick="mostraSceltaProfessore()">
+              <i class="bi bi-arrow-left" style="font-size:11px;"></i> Tutti i professori
+            </div>
+            <div style="margin-bottom:20px;">
+              <span style="font-family:var(--font-mono);font-size:.65rem;color:var(--ink-4);text-transform:uppercase;letter-spacing:.12em;">Quiz di</span>
+              <h3 style="font-size:1.1rem;margin-top:4px;">${prof}</h3>
+            </div>`;
 
-            var containerCards = document.createElement("div")
-            div.appendChild(containerCards)
+          if (data.length === 0) {
+            div.innerHTML += `<div class="empty-state" style="text-align:left;padding:32px 0;">Nessun quiz disponibile per questo professore.</div>`;
+            return;
+          }
 
-            data.forEach(q => {
-                fetch("/check_quiz_done/" + q.titolo + "/" + studente)
-                    .then(res => res.json())
-                    .then(check => {
-                        var card = document.createElement("div")
-                        card.className = "quiz_card mb-3 d-flex justify-content-between align-items-center p-3 shadow-sm border-0"
-                        card.style.background = "white";
+          var containerCards = document.createElement("div");
+          div.appendChild(containerCards);
 
-                        if (check.done) {
-                            card.innerHTML = `<strong>${q.titolo}</strong> 
-                                <span class='text-success fw-bold'><i class='bi bi-check-circle-fill'></i> Completato</span>`
-                        } else {
-                            card.innerHTML = `<strong>${q.titolo}</strong> 
-                                <button class='btn btn-primary btn-sm px-4' onclick='startQuiz("${q.titolo}")'>Inizia</button>`
-                        }
-                        containerCards.appendChild(card)
-                    })
-            })
-        })
-}
+          data.forEach(q => {
+            fetch("/check_quiz_done/" + q.titolo + "/" + studente)
+              .then(res => res.json())
+              .then(check => {
+                var card = document.createElement("div");
+                card.className = "quiz_card hover-lift";
 
-    // 3. Genera Statistiche (Grafico + Lista con voti colorati)
-    function generaStatistiche() {
-        var studente = localStorage.getItem("username");
-        fetch("/get_student_stats/" + studente)
-            .then(res => res.json())
-            .then(data => {
-                if (data.length === 0) return;
-
-                // --- GRAFICO ---
-                const labels = data.map(item => item.quiz);
-                const voti = data.map(item => item.voto);
-                const ctx = document.getElementById('studentChart').getContext('2d');
-                new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: 'Voto (Decimi)',
-                            data: voti,
-                            borderColor: '#ffc107',
-                            backgroundColor: 'rgba(255, 193, 7, 0.1)',
-                            borderWidth: 3,
-                            fill: true,
-                            tension: 0.3,
-                            pointRadius: 5
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: { y: { beginAtZero: true, max: 10 } }
-                    }
-                });
-
-                // --- CRONOLOGIA CON VOTI ---
-                var listaUl = document.getElementById("lista_ultimi_quiz");
-                listaUl.innerHTML = ""; 
-                
-                const ultimiCinque = data.slice(-5).reverse();
-                ultimiCinque.forEach(item => {
-                    var li = document.createElement("li");
-                    li.className = "list-group-item d-flex justify-content-between align-items-center border-0 border-bottom px-0 py-3";
-                    
-                    // Colore del badge: verde se >= 6, rosso se < 6
-                    let badgeClass = item.voto >= 6 ? "bg-success" : "bg-danger";
-
-                    li.innerHTML = `
-                        <span><i class="bi bi-journal-check text-success me-2"></i> <strong>${item.quiz}</strong></span>
-                        <span class="voto-badge badge ${badgeClass} text-white">Voto: ${item.voto}</span>
-                    `;
-                    listaUl.appendChild(li);
-                });
-            });
+                if (check.done) {
+                  card.innerHTML = `
+                    <span style="font-size:.925rem;font-weight:500;">${q.titolo}</span>
+                    <span class="done-label"><i class="bi bi-check" style="font-size:13px;"></i> Completato</span>`;
+                } else {
+                  card.innerHTML = `
+                    <span style="font-size:.925rem;font-weight:500;">${q.titolo}</span>
+                    <button onclick='startQuiz("${q.titolo}")' style="font-size:.8rem;padding:8px 18px;">
+                      Inizia <i class="bi bi-arrow-right" style="font-size:12px;"></i>
+                    </button>`;
+                }
+                containerCards.appendChild(card);
+              });
+          });
+        });
     }
 
-    // Inizializza la pagina
+    function generaStatistiche() {
+      var studente = localStorage.getItem("username");
+      fetch("/get_student_stats/" + studente)
+        .then(res => res.json())
+        .then(data => {
+          if (data.length === 0) return;
+
+          const labels = data.map(item => item.quiz);
+          const voti = data.map(item => item.voto);
+          const ctx = document.getElementById('studentChart').getContext('2d');
+
+          new Chart(ctx, {
+            type: 'line',
+            data: {
+              labels,
+              datasets: [{
+                label: 'Voto',
+                data: voti,
+                borderColor: '#0E0E0E',
+                backgroundColor: 'rgba(14,14,14,0.04)',
+                borderWidth: 1.5,
+                fill: true,
+                tension: 0.3,
+                pointRadius: 4,
+                pointBackgroundColor: '#0E0E0E',
+                pointBorderWidth: 0,
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { display: false },
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  max: 10,
+                  ticks: {
+                    font: { family: "'DM Mono', monospace", size: 11 },
+                    color: '#9B9B9B',
+                    stepSize: 2,
+                  },
+                  grid: { color: '#F0EDE8' },
+                  border: { display: false }
+                },
+                x: {
+                  ticks: {
+                    font: { family: "'DM Mono', monospace", size: 11 },
+                    color: '#9B9B9B',
+                  },
+                  grid: { display: false },
+                  border: { display: false }
+                }
+              }
+            }
+          });
+
+          var listaDiv = document.getElementById("lista_ultimi_quiz");
+          listaDiv.innerHTML = "";
+          const ultimi = data.slice(-5).reverse();
+          ultimi.forEach(item => {
+            var el = document.createElement("div");
+            el.className = "history-item";
+            const cls = item.voto >= 6 ? "ok" : "fail";
+            el.innerHTML = `
+              <span style="font-size:.875rem;color:var(--ink-2);">${item.quiz}</span>
+              <span class="voto-badge ${cls}">${item.voto}/10</span>`;
+            listaDiv.appendChild(el);
+          });
+        });
+    }
+
     mostraSceltaProfessore();
     generaStatistiche();
-
   </script>
 
 </body>
