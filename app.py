@@ -11,10 +11,10 @@ app = Flask(__name__)
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
 
 # CHIAVE SEGRETA: Indispensabile per le sessioni
-app.secret_key = "e3da31bf248d10bc2c82edbeff72bb59d4e02c7a72882b7b"
+app.secret_key = os.environ.get("SECRET_KEY")
 
 # Configurazione DB
-client = MongoClient("mongodb://localhost:27017")
+client = MongoClient(os.environ.get("MONGO_URI"))
 db = client["Quizzy"]
 utenti_collection = db["utenti"]
 
