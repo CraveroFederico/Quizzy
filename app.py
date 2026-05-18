@@ -4,7 +4,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import os
 from datetime import timedelta
 
-
+##QUIZZY##
 app = Flask(__name__)
 
 # Imposta la durata a 30 minuti (o quanto preferisci)
