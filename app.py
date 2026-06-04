@@ -14,7 +14,7 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
 app.secret_key = "e3da31bf248d10bc2c82edbeff72bb59d4e02c7a72882b7b"
 
 # Configurazione DB
-client = MongoClient("mongodb://localhost:27017")
+client = MongoClient("mongodb+srv://admin:admin@cluster.pfxqbgg.mongodb.net/?appName=Cluster")
 db = client["Quizzy"]
 utenti_collection = db["utenti"]
 
