@@ -1,0 +1,11 @@
+pulsante di logout sopra nell'header
+
+selezione risposta corretta con radio button (click, non numero)
+
+un professore può avere la possibilità di eliminare e modificare un esame (aggiungere due bottoni su esame creato)
+
+⏱ timer durante quiz
+📊 grafici risultati (Chart.js) per studenti (voto/esami) sotto alla scelta dei professori
+
+tutto deve essere responsive (quando lo studente finisce l'esame, si chiude e il punteggio si 
+visualizza affianco al titolo dell'esame che non puoi più aprire; dare un feedback al professore quando crea un esame o aggiunge una domanda, quando ho fatto un esame torno nella pagina dei quiz non deve poter rifarlo, deve "aggiornarsi in tempo reale")

@@ -4,17 +4,21 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import os
 from datetime import timedelta
 
-
+##QUIZZY##
 app = Flask(__name__)
 
 # Imposta la durata a 30 minuti (o quanto preferisci)
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
 
 # CHIAVE SEGRETA: Indispensabile per le sessioni
-app.secret_key = "e3da31bf248d10bc2c82edbeff72bb59d4e02c7a72882b7b"
+app.secret_key = os.environ.get("SECRET_KEY")
 
 # Configurazione DB
+<<<<<<< HEAD
 client = MongoClient("mongodb+srv://admin:admin@cluster.pfxqbgg.mongodb.net/?appName=Cluster")
+=======
+client = MongoClient(os.environ.get("MONGO_URI"))
+>>>>>>> 0333e3b2da690746c13efd53240e8402efdd07e2
 db = client["Quizzy"]
 utenti_collection = db["utenti"]
 
